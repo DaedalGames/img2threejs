@@ -48,6 +48,16 @@ one for `doctor`:
 ~/.config/opencode/skills/img2threejs            -> <your checkout>
 ```
 
+> **WARNING — CLI does NOT honour an existing workspace symlink.**
+> Running `npx img2threejs@latest install --host <host>` on a host where the
+> workspace checkout is already linked into Hermes (or any other host) will
+> create a **second copy** of the skill at `~/.img2threejs/releases/<sha>/img2threejs/`
+> and link that host to the release copy, not to your checkout. The two copies
+> then drift independently, which violates the "Canonical shared checkout"
+> promise above.
+> If a host already has the workspace linked, use the **manual install** form
+> (the symlink snippet further down) instead of running the CLI on that host.
+
 Install and verify runbook (which CLI does what, expected output, troubleshooting):
 [`docs/INSTALL.md`](docs/INSTALL.md).
 

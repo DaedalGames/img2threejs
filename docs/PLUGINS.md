@@ -80,8 +80,12 @@ Run against a throwaway `$IMG2_HOME` (nothing of an existing setup touched), in 
 3. **Agent access** — links the launcher into a writable directory on `PATH`. When no such directory
    qualifies it links **nothing**: it warns `No writable launcher directory on PATH; use npx
    instead` and prints the `npx` form. That is why the block above is written to work whether or not
-   an `img2` launcher exists. Host settings are touched only for hosts it detects (`Claude Code not
-   detected; settings left unchanged`).
+   an `img2` launcher exists. Claude host detection is **directory-existence** at `~/.claude/`, not
+   `claude`-on-`PATH`: when that directory exists the harness writes
+   `permissions.additionalDirectories` to `~/.claude/settings.json` regardless of whether Claude
+   Code is installed; the message `Claude Code not detected; settings left unchanged` means only
+   that the directory is absent. Side-effect contract and how to suppress it:
+   [`docs/INSTALL.md` §2](INSTALL.md#2-install-the-harness-only-if-a-domain-plugin-serves-the-item).
 
 ## What a run sees depends on `$IMG2_HOME`
 
