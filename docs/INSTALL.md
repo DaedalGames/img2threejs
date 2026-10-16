@@ -8,12 +8,25 @@ the plugin surface in [`docs/PLUGINS.md`](PLUGINS.md). Where this page and those
 
 ## 0. Two CLIs, one skill — do not conflate them
 
-| | Base skill CLI | Plugin harness CLI |
-|---|---|---|
-| Package | `img2threejs` | `@img2threejs/img2` |
-| Installs | **this skill** into agent hosts | **plugins** (domain steps, gates, targets) |
-| Hosts it writes skill links for | `hermes`, `claude`, `codex`, `opencode` | `claude`, `codex`, `opencode` |
-| Run as | `npx --yes img2threejs@latest <cmd>` | `npx --yes @img2threejs/img2@latest <cmd>` |
+|| | Base skill CLI | Plugin harness CLI |
+||---|---|---|
+|| Package | `img2threejs` | `@img2threejs/img2` |
+|| Installs | **this skill** into agent hosts | **plugins** (domain steps, gates, targets) |
+|| Hosts it writes skill links for | `hermes`, `claude`, `codex`, `opencode` | `claude`, `codex`, `opencode` |
+|| Run as | `npx --yes img2threejs@latest <cmd>` | `npx --yes @img2threejs/img2@latest <cmd>` |
+|| `--version --json` shape | `key: value` text (2 lines) | real JSON (one line, parseable) |
+
+Two CLIs, two `--version --json` shapes. The base skill CLI prints human-readable text:
+
+```text
+img2threejs CLI: 0.1.1
+default skill ref: v2.0.0
+```
+
+The harness CLI prints a single-line JSON object with the keys you can read programmatically
+(`harness`, `maxPluginSchema`, `coreApi`, `contract`, `commands`). Pipe the harness one through
+`jq`; do not pipe the base-skill one. If you want a machine-parseable version of the base-skill
+CLI, the `default skill ref` line is the only field that is stable across releases.
 
 Installing one does **not** install the other, and adding a plugin does not generate a model.
 Reach for the harness only when a domain plugin serves the item (CS2 skins, animated characters);
@@ -46,14 +59,22 @@ the plan names exactly those:
 - The installer refuses to overwrite a manual install or an unrelated link rather than clobbering it.
 
 Manual alternative — one checkout, every host entering it through a symlink, so copies cannot drift
-(`~/.config/opencode` may be `$XDG_CONFIG_HOME/opencode`):
+(`~/.config/opencode` may be `$XDG_CONFIG_HOME/opencode`; Hermes is profile-scoped — see the note below):
 
 ```text
-~/.hermes/skills/img2threejs          -> <your checkout>
-~/.claude/skills/img2threejs          -> <your checkout>
-~/.codex/skills/img2threejs           -> <your checkout>
-~/.config/opencode/skills/img2threejs -> <your checkout>
+# On a Hermes host, symlink into each profile that needs the skill:
+~/.hermes/profiles/<profile>/skills/img2threejs -> <your checkout>
+
+# Other hosts (single-path per host):
+~/.claude/skills/img2threejs                       -> <your checkout>
+~/.codex/skills/img2threejs                        -> <your checkout>
+~/.config/opencode/skills/img2threejs              -> <your checkout>
 ```
+
+Hermes note: skills are not global — they live under `~/.hermes/profiles/<profile>/skills/`.
+`HERMES_ACTIVE_PROFILE` (default `img2threejs`) decides which profile a session reads from, so the
+symlink must be repeated for every profile that should see the skill. A runbook with `HERMES_ACTIVE_PROFILE`
+set to a profile without the link will report "Unknown skill" and continue without the router.
 
 Choose the CLI **or** the manual clone for a given path, never both. A manual clone follows the
 repository's default branch; the CLI pins a release.
@@ -70,8 +91,12 @@ npx --yes @img2threejs/img2@latest add cs2 --yes      # a plugin by catalog id
 On a machine with no `$IMG2_HOME`, `doctor` exits **1** and says exactly
 `no harness checkout at <home>/.img2/harness; run 'img2 install'`, while `--version` and `list`
 still answer. If no writable directory on `PATH` qualifies, `install` links **no** launcher and
-warns `No writable launcher directory on PATH; use npx instead`. Full behaviour, host-skill linking
-and the `$IMG2_HOME` trap: [`docs/PLUGINS.md`](PLUGINS.md).
+warns `No writable launcher directory on PATH; use npx instead`. **Auto-detected hosts may be
+modified even if you do not use them** — e.g. on a Hermes-only host the installer may still write
+to `~/.claude/settings.json` if `~/.claude` is present, to add an `img2-core` allow-list entry. Use
+`npx --yes @img2threejs/img2@latest install --help` for a `HOSTS=…` style flag if you need to scope
+this. Full behaviour, host-skill linking and the `$IMG2_HOME` trap:
+[`docs/PLUGINS.md`](PLUGINS.md).
 
 ## 3. Verify, and know what each check proves
 

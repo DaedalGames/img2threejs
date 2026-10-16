@@ -28,13 +28,19 @@ read the named file at the moment you reach that stage, not before.
 
 Keep one checkout of this repository and let every host enter it through a symlink, so the hosts
 execute the same code instead of drifting apart. The installer does this for the hosts it detects —
-`hermes`, `claude`, `codex`, `opencode` — and a manual install symlinks the same entry per host:
+`hermes`, `claude`, `codex`, `opencode` — and a manual install symlinks the same entry per host.
+**Hermes is profile-scoped**: skills live under `~/.hermes/profiles/<profile>/skills/`, so a manual
+install must symlink into the profile that will read the skill (the active one, by default
+`img2threejs`, set with `HERMES_ACTIVE_PROFILE`):
 
 ```text
-~/.hermes/skills/img2threejs          -> <your checkout>
-~/.claude/skills/img2threejs          -> <your checkout>
-~/.codex/skills/img2threejs           -> <your checkout>
-~/.config/opencode/skills/img2threejs -> <your checkout>
+# Hermes (one symlink per profile that needs the skill):
+~/.hermes/profiles/<profile>/skills/img2threejs -> <your checkout>
+
+# Other hosts (single path per host):
+~/.claude/skills/img2threejs                     -> <your checkout>
+~/.codex/skills/img2threejs                      -> <your checkout>
+~/.config/opencode/skills/img2threejs            -> <your checkout>
 ```
 
 Install and verify runbook (which CLI does what, expected output, troubleshooting):

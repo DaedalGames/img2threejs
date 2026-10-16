@@ -161,7 +161,8 @@ global fidelity score passes.
 ## Host skills
 
 The harness links each plugin into the skill directories of the hosts it knows about
-(`~/.claude/skills/img2-<id>`, the Codex and OpenCode equivalents), using a harness-derived name —
+(`~/.claude/skills/img2-<id>`, the Codex and OpenCode equivalents, and
+`~/.hermes/profiles/<profile>/skills/img2-<id>` for Hermes), using a harness-derived name —
 a plugin never chooses it. If your agent host is **not** in that table, nothing is linked for it,
 and the plugin's own `SKILL.md` (intake contracts, finish rulebooks, review gates) is simply not in
 your model's context. Two workarounds, in order of preference:
