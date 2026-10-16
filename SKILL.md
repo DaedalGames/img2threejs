@@ -31,11 +31,16 @@ execute the same code instead of drifting apart. The installer does this for the
 `hermes`, `claude`, `codex`, `opencode` — and a manual install symlinks the same entry per host.
 **Hermes is profile-scoped**: skills live under `~/.hermes/profiles/<profile>/skills/`, so a manual
 install must symlink into the profile that will read the skill (the active one, by default
-`img2threejs`, set with `HERMES_ACTIVE_PROFILE`):
+`img2threejs`, set with `HERMES_ACTIVE_PROFILE`). **Two paths may be needed for Hermes**: the
+profile-scoped path (above) is what Hermes discovers at session start, but the base-skill
+`img2threejs doctor` only validates the **global** path `~/.hermes/skills/img2threejs`. If the
+preflight is part of your workflow, create both — the profile-scoped one for Hermes, the global
+one for `doctor`:
 
 ```text
-# Hermes (one symlink per profile that needs the skill):
+# Hermes: BOTH paths may be needed (profile-scoped for Hermes, global for `img2threejs doctor`).
 ~/.hermes/profiles/<profile>/skills/img2threejs -> <your checkout>
+~/.hermes/skills/img2threejs                    -> <your checkout>
 
 # Other hosts (single path per host):
 ~/.claude/skills/img2threejs                     -> <your checkout>

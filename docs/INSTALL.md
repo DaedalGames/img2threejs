@@ -14,7 +14,12 @@ the plugin surface in [`docs/PLUGINS.md`](PLUGINS.md). Where this page and those
 || Installs | **this skill** into agent hosts | **plugins** (domain steps, gates, targets) |
 || Hosts it writes skill links for | `hermes`, `claude`, `codex`, `opencode` | `claude`, `codex`, `opencode` |
 || Run as | `npx --yes img2threejs@latest <cmd>` | `npx --yes @img2threejs/img2@latest <cmd>` |
-|| `--version --json` shape | `key: value` text (2 lines) | real JSON (one line, parseable) |
+|| `--version --json` shape | `key: value` text (2 lines; `--json` is silently ignored) | real JSON (one line, parseable) |
+
+**Hermes name-collision note**: on a Hermes-equipped host, `which img2threejs` may resolve to
+`~/.local/bin/img2threejs`, a Hermes profile launcher (it runs `hermes -p img2threejs …`, not the
+npm CLI). If the bare name does not match the npm CLI, always invoke the base skill via
+`npx --yes img2threejs@latest <cmd>` — never type `img2threejs` directly.
 
 Two CLIs, two `--version --json` shapes. The base skill CLI prints human-readable text:
 
@@ -23,10 +28,13 @@ img2threejs CLI: 0.1.1
 default skill ref: v2.0.0
 ```
 
+The `--json` flag on the base skill CLI is **silently ignored** — the output is the same two-line
+text whether you pass `--json` or not; do not pipe it through `jq`. If you need a machine-parseable
+version of the base-skill CLI, the `default skill ref` line is the only field stable across releases.
+
 The harness CLI prints a single-line JSON object with the keys you can read programmatically
 (`harness`, `maxPluginSchema`, `coreApi`, `contract`, `commands`). Pipe the harness one through
-`jq`; do not pipe the base-skill one. If you want a machine-parseable version of the base-skill
-CLI, the `default skill ref` line is the only field that is stable across releases.
+`jq`; do not pipe the base-skill one.
 
 Installing one does **not** install the other, and adding a plugin does not generate a model.
 Reach for the harness only when a domain plugin serves the item (CS2 skins, animated characters);
@@ -62,19 +70,22 @@ Manual alternative — one checkout, every host entering it through a symlink, s
 (`~/.config/opencode` may be `$XDG_CONFIG_HOME/opencode`; Hermes is profile-scoped — see the note below):
 
 ```text
-# On a Hermes host, symlink into each profile that needs the skill:
+# Hermes: BOTH paths may be needed (profile-scoped for Hermes, global for `img2threejs doctor`).
 ~/.hermes/profiles/<profile>/skills/img2threejs -> <your checkout>
+~/.hermes/skills/img2threejs                    -> <your checkout>
 
-# Other hosts (single-path per host):
+# Other hosts (single path per host):
 ~/.claude/skills/img2threejs                       -> <your checkout>
-~/.codex/skills/img2threejs                        -> <your checkout>
+~/..codex/skills/img2threejs                        -> <your checkout>
 ~/.config/opencode/skills/img2threejs              -> <your checkout>
 ```
 
 Hermes note: skills are not global — they live under `~/.hermes/profiles/<profile>/skills/`.
 `HERMES_ACTIVE_PROFILE` (default `img2threejs`) decides which profile a session reads from, so the
 symlink must be repeated for every profile that should see the skill. A runbook with `HERMES_ACTIVE_PROFILE`
-set to a profile without the link will report "Unknown skill" and continue without the router.
+set to a profile without the link will report "Unknown skill" and continue without the router. **The
+base-skill `img2threejs doctor` only validates the global path `~/.hermes/skills/`**, not the
+profile-scoped one — if `doctor` is part of your preflight, create both links.
 
 Choose the CLI **or** the manual clone for a given path, never both. A manual clone follows the
 repository's default branch; the CLI pins a release.
@@ -122,6 +133,8 @@ signature of two `$IMG2_HOME`s with the plugin registered in the inactive one.
 | `install` refuses a ref | branch or short SHA | pass a semantic tag or the full 40-char SHA |
 | Dry-run refuses with `refusing to replace an unmanaged skill at …` | a manual clone or unrelated link occupies that path | `checkLinks()` runs **before** the dry-run gate — on a managed install, `--dry-run` will not print the plan when a manual entry exists; move the entry yourself first, then run `--dry-run` |
 | Unmanaged base skill reported | a manual clone occupies that skill path | keep it, or move that entry deliberately before using the CLI |
+| Base `doctor` says `hermes … (no link)` on Hermes despite a profile-scoped symlink | the doctor validates `~/.hermes/skills/`, not `~/.hermes/profiles/<profile>/skills/` | create the **global** symlink too; the doctor and Hermes discovery use different paths |
+| `img2threejs` runs the wrong CLI | the bare name resolves to a Hermes profile launcher on this host | always use `npx --yes img2threejs@latest …`; check `which img2threejs` if unsure |
 | A profile your run needs is missing | the plugin is not registered in the **active** `$IMG2_HOME` | `img2 list`, then `img2 add …` or fix `$IMG2_HOME` |
 | `img2 install` modified `~/.claude/settings.json` unexpectedly | `~/.claude/` exists — the harness always adds `$IMG2_HOME` to `permissions.additionalDirectories` when it detects Claude, regardless of whether Claude Code is installed | back up `settings.json` first and restore after, or remove `~/.claude/` before install; this is directory-detected, not installed-Code-detected |
 | A plugin is registered but its `SKILL.md` is missing from your model context under Hermes | the harness `HOSTS` table does not include Hermes, so `img2 add` does not link `~/.hermes/profiles/<active>/skills/img2-<id>` | `ln -s "$IMG2_HOME/plugins/<id>" ~/.hermes/profiles/${HERMES_ACTIVE_PROFILE:-img2threejs}/skills/img2-<id>` per plugin, or read steps by their printed absolute path — see [`docs/PLUGINS.md`](PLUGINS.md) "Host skills" |
