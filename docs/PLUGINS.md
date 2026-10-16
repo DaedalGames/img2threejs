@@ -160,15 +160,32 @@ global fidelity score passes.
 
 ## Host skills
 
-The harness links each plugin into the skill directories of the hosts it knows about
-(`~/.claude/skills/img2-<id>`, the Codex and OpenCode equivalents, and
-`~/.hermes/profiles/<profile>/skills/img2-<id>` for Hermes), using a harness-derived name —
-a plugin never chooses it. If your agent host is **not** in that table, nothing is linked for it,
-and the plugin's own `SKILL.md` (intake contracts, finish rulebooks, review gates) is simply not in
-your model's context. Two workarounds, in order of preference:
+The harness's `HOSTS` table (`~/.img2/harness/bin/img2.mjs`) names **Claude Code, Codex and
+OpenCode**; on `img2 add` it creates `<host-skills-dir>/img2-<id>` for each one it detects, using
+a harness-derived name — a plugin never chooses it. **Hermes is not in that table today.** So for
+a Hermes user, `img2 add <id>` registers the plugin and clones it under `$IMG2_HOME/plugins/<id>`,
+but **does not create** `~/.hermes/profiles/<active>/skills/img2-<id>` — the plugin's own
+`SKILL.md` (intake contracts, finish rulebooks, review gates) is not in your model's context
+unless you create that link yourself, one per plugin.
+
+`img2 doctor` only walks the harness `HOSTS` table, so for a Hermes-only host it says nothing about
+plugin-skill links — the base CLI's `img2threejs doctor` reports the **base** skill link (per
+host), and is the only reliable read-back for a Hermes plugin link you made by hand.
+
+Two workarounds for hosts the harness does not know about (Hermes today, anything new until
+upstream lands the row), in order of preference:
 
 1. Link it yourself with the same name convention, from your host's skills directory to
-   `$IMG2_HOME/plugins/<id>` — the same target the harness would have used.
+   `$IMG2_HOME/plugins/<id>` — the same target the harness would have used. For the active Hermes
+   profile:
+
+   ```bash
+   ln -s "$IMG2_HOME/plugins/cs2" ~/.hermes/profiles/${HERMES_ACTIVE_PROFILE:-img2threejs}/skills/img2-cs2
+   ```
+
+   A homemade Hermes link is visible to your model and invisible to `img2 doctor`. If you want it
+   under harness bookkeeping, put the row upstream in `img2/bin/img2.mjs` rather than per-machine.
+
 2. Read the files directly: every step a profile splices in prints an **absolute** path, so the
    contract a step names can be read without a skill link at all.
 

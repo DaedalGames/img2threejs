@@ -84,6 +84,18 @@ python3 forge/state.py init --help | grep profile   # the profiles this environm
   `--link <path>` symlinks a local checkout instead of cloning (plugin development); `--ref <tag>`
   pins something other than the newest tag. Check the version first — `img2 plugins` and short ids
   do not exist before CLI 0.4.0, and the `img2threejs/plugin-<id>` form is the portable one.
+
+  **Hermes caveat.** The harness's `HOSTS` table does not include Hermes, so `img2 add` does NOT
+  create `~/.hermes/profiles/<active>/skills/img2-<id>` for you — the plugin's `SKILL.md` is not
+  in your model's context until you symlink it yourself:
+
+  ```bash
+  ln -s "$IMG2_HOME/plugins/cs2" ~/.hermes/profiles/${HERMES_ACTIVE_PROFILE:-img2threejs}/skills/img2-cs2
+  ```
+
+  `img2 doctor` walks only the harness `HOSTS` table and is silent about a hand-made Hermes link;
+  the read-back that does see it is your host's own skill listing.
+
 - Then read what the profile's own steps name, completely, at the moment you reach them: the
   plugin's `SKILL.md` and the contract each step points at are the authority for that domain's
   steps, gates and reference material, exactly as they are for `character`.

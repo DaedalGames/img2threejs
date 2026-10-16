@@ -88,15 +88,18 @@ npx --yes @img2threejs/img2@latest install --yes      # clones the harness, link
 npx --yes @img2threejs/img2@latest add cs2 --yes      # a plugin by catalog id
 ```
 
-On a machine with no `$IMG2_HOME`, `doctor` exits **1** and says exactly
-`no harness checkout at <home>/.img2/harness; run 'img2 install'`, while `--version` and `list`
-still answer. If no writable directory on `PATH` qualifies, `install` links **no** launcher and
-warns `No writable launcher directory on PATH; use npx instead`. **Auto-detected hosts may be
-modified even if you do not use them** — e.g. on a Hermes-only host the installer may still write
-to `~/.claude/settings.json` if `~/.claude` is present, to add an `img2-core` allow-list entry. Use
-`npx --yes @img2threejs/img2@latest install --help` for a `HOSTS=…` style flag if you need to scope
-this. Full behaviour, host-skill linking and the `$IMG2_HOME` trap:
-[`docs/PLUGINS.md`](PLUGINS.md).
+On a machine with no `$IMG2_HOME`, `doctor` exits **1** and prints a `FAIL` line beginning
+`no harness checkout at <home>/harness; run 'img2 install'` (where `<home>` is `$IMG2_HOME` if
+set, otherwise `~/.img2`), while `--version` and `list` still answer. If no writable directory on
+`PATH` qualifies, `install` links **no** launcher and warns `No writable launcher directory on
+PATH; use npx instead`. **Auto-detected hosts may be modified even if you do not use them** —
+`img2 install` always touches Claude's settings when `~/.claude/` exists, regardless of whether
+Claude Code is on `PATH` or even installed, by appending `$IMG2_HOME` to
+`permissions.additionalDirectories` in `~/.claude/settings.json` so its file tools can reach the
+harness. There is no `img2 install` flag that scopes this today — to skip the Claude settings
+write, back up `~/.claude/settings.json` before `install` and restore it after, or remove
+`~/.claude/` first (the host detection is purely directory-existence based). Full behaviour,
+host-skill linking and the `$IMG2_HOME` trap: [`docs/PLUGINS.md`](PLUGINS.md).
 
 ## 3. Verify, and know what each check proves
 
@@ -117,8 +120,11 @@ signature of two `$IMG2_HOME`s with the plugin registered in the inactive one.
 | `img2threejs: command not found` (or `img2`) | the CLI is not on `PATH` | run the `npx --yes <package>@latest …` form — no install required |
 | Host missing from the dry-run plan | that host's directory does not exist | create/point it, or install with an explicit `--host` |
 | `install` refuses a ref | branch or short SHA | pass a semantic tag or the full 40-char SHA |
+| Dry-run refuses with `refusing to replace an unmanaged skill at …` | a manual clone or unrelated link occupies that path | `checkLinks()` runs **before** the dry-run gate — on a managed install, `--dry-run` will not print the plan when a manual entry exists; move the entry yourself first, then run `--dry-run` |
 | Unmanaged base skill reported | a manual clone occupies that skill path | keep it, or move that entry deliberately before using the CLI |
 | A profile your run needs is missing | the plugin is not registered in the **active** `$IMG2_HOME` | `img2 list`, then `img2 add …` or fix `$IMG2_HOME` |
+| `img2 install` modified `~/.claude/settings.json` unexpectedly | `~/.claude/` exists — the harness always adds `$IMG2_HOME` to `permissions.additionalDirectories` when it detects Claude, regardless of whether Claude Code is installed | back up `settings.json` first and restore after, or remove `~/.claude/` before install; this is directory-detected, not installed-Code-detected |
+| A plugin is registered but its `SKILL.md` is missing from your model context under Hermes | the harness `HOSTS` table does not include Hermes, so `img2 add` does not link `~/.hermes/profiles/<active>/skills/img2-<id>` | `ln -s "$IMG2_HOME/plugins/<id>" ~/.hermes/profiles/${HERMES_ACTIVE_PROFILE:-img2threejs}/skills/img2-<id>` per plugin, or read steps by their printed absolute path — see [`docs/PLUGINS.md`](PLUGINS.md) "Host skills" |
 | `FAIL … opencode link missing` | a host skill link is absent | inspect the reported path; `sync` regenerates harness data, not host links |
 | Private plugin source 404 / access denied | no Git credentials for that repository | sign in with an authorized account; no installer can bypass source permissions |
 
