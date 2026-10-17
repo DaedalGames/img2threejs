@@ -147,3 +147,147 @@ signature of two `$IMG2_HOME`s with the plugin registered in the inactive one.
 - [`docs/PLUGINS.md`](PLUGINS.md) — what a run actually sees: registry, `domain.json` splice, gates, host skills.
 - Harness [`PLUGIN_CONTRACT.md`](https://github.com/img2threejs/img2/blob/main/docs/PLUGIN_CONTRACT.md) — every plugin rule, including the gate runner and the emission-target socket.
 - [`CONTRIBUTING.md`](../CONTRIBUTING.md) — packaging and publication checks for this repository's own CLI.
+
+## 6. Other popular open-source coding agents
+
+Sections §1–§5 cover the four hosts the base-skill CLI knows about —
+`hermes`, `claude`, `codex`, `opencode` (the `HOSTS` table in
+`bin/img2threejs.mjs`, §1). The four agents below are open-source, popular,
+multi-provider, and **not** in that table today; the install command ships
+its own launcher, but the base-skill link is something you create by hand —
+the same one-checkout / many-symlinks idea from §1. None of them adds a row
+to `HOSTS`; the link is purely a directory convention the agent reads on
+startup, so a fresh agent release can keep working without code changes here.
+
+All four read **`AGENTS.md`** from the project root when it exists — the
+`agents.md` standard that Aider, Mistral Vibe, Pi and most other open-source
+agents adopt. For this skill that file is **not** checked in today (the
+canonical shared-instructions file in this repo is `CLAUDE.md`, §1); drop an
+`AGENTS.md` next to it when an open-source agent is your host and the agents
+in §6 will pick it up automatically.
+
+### 6.1 Aider
+
+Install the Python CLI; it pulls from PyPI:
+
+```bash
+pip install aider-chat
+```
+
+Aider reads conventions from any of these, in order:
+
+- `AGENTS.md` at the project root (the `agents.md` standard) — enabled by
+  adding it to Aider's `read` list.
+- `CONVENTIONS.md` at the project root — the historical convention; load
+  with `/read CONVENTIONS.md` or `aider --read CONVENTIONS.md`.
+- `.aider.conf.yml` (also `.aider.model.settings.yml`) — per-project YAML,
+  always loaded, where you can pin `read:` (single file or list) so
+  `AGENTS.md` / `CONVENTIONS.md` is loaded automatically on every run.
+
+`.aider*` files in the repo root are Aider-managed state (history,
+caches, model settings) — they are **not** the skill link. For the skill
+itself, follow §1's manual rule:
+
+```text
+# Single path — Aider does not auto-pick up skills, but you can point
+# `read:` at the skill's SKILL.md or load it via `/read <abs-path>`.
+~/.aider/skills/img2threejs  ->  <your checkout>   # optional convention
+```
+
+There is no Aider-blessed `<host-skills-dir>/img2threejs` location; the
+practical pattern is `read: [SKILL.md]` (relative to the repo root) in
+`.aider.conf.yml`, or pass it on the command line:
+
+```bash
+aider --read SKILL.md
+```
+
+The same pattern lets the harness reach a plugin in a non-default
+`$IMG2_HOME`: read steps by their printed absolute path — see
+[`docs/PLUGINS.md`](PLUGINS.md#host-skills) "Host skills".
+
+### 6.2 Pi (`@earendil-works/pi-coding-agent`)
+
+Install the npm CLI; `@mariozechner/pi-coding-agent` is the same upstream
+package (the `pi-mono` monorepo):
+
+```bash
+npm install -g @earendil-works/pi-coding-agent
+# or: npm install -g @mariozechner/pi-coding-agent
+```
+
+Pi looks for skills under its own per-user directory and reads
+`AGENTS.md` from the project root:
+
+```text
+~/.pi/skills/img2threejs  ->  <your checkout>   # Pi's skill path
+```
+
+`playground/Dockerfile.procedural` pins `@earendil-works/pi-coding-agent@0.85.1`
+for the procedural image — the same family, an older release — so anything
+you link in `~/.pi/skills/` for a host agent also resolves inside the
+playground container when its `~/.pi` is mounted or its `skills/` is
+populated by the same step.
+
+The harness (`img2`) does not link Pi's skill path on `img2 add` —
+Pi is not in `HOSTS` (see [`docs/PLUGINS.md`](PLUGINS.md#host-skills)).
+The link above is the same "register this link as yourself" workaround the
+PLUGINS page describes for Hermes: the plugin still lives under
+`$IMG2_HOME/plugins/<id>`, the symlink above is what makes its `SKILL.md`
+visible to the agent.
+
+### 6.3 Mistral Vibe
+
+Bootstrap with the official installer; it places `uv` (if missing) and
+then installs `mistral-vibe` as a `uv` tool:
+
+```bash
+curl -LsSf https://mistral.ai/vibe/install.sh | bash
+```
+
+Mistral Vibe (Apache-2.0) reads `AGENTS.md` from the project root plus
+whatever project-level rules you ship; like Aider it has no host-skills
+directory baked in, so the practical pattern is the same:
+
+- Drop an `AGENTS.md` at the repo root that links to this skill, or
+- load the skill's `SKILL.md` directly in the conversation.
+
+For harness-installed plugins, read steps by their printed absolute path —
+[`docs/PLUGINS.md`](PLUGINS.md#host-skills).
+
+### 6.4 Droid (Factory AI)
+
+Install via Factory's official script (Homebrew, npm and Windows variants
+exist as well):
+
+```bash
+curl -fsSL https://app.factory.ai/cli | sh
+# or: brew install --cask droid
+# or: npm install -g droid
+```
+
+Droid manages its own auth and plans, and exposes agent-shape features
+the other three do not: **Custom Droids** (specialised sub-agents managed
+via `/droids`), **Missions** (multi-agent projects run interactively with
+`/missions` or headlessly with `droid exec --mission`), and a `Plugins`
+mechanism for bundles of commands, droids, skills and hooks
+(`/plugins`, `droid plugin install`). It reads `AGENTS.md` from the
+project root when present.
+
+For this skill, the equivalent of §1's manual link is to place the skill
+where Droid's `/skills` (or `/plugins`) will pick it up, or to symlink
+it next to a Custom Droid's system prompt. Like the others, Droid is
+not in `HOSTS`, so a plugin's `SKILL.md` is not auto-linked; reach for
+the absolute-path workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills)
+when a run needs plugin context under Droid.
+
+### What this section does NOT do
+
+- It does **not** add Aider, Pi, Mistral Vibe or Droid to the `HOSTS` table
+  in `bin/img2threejs.mjs`. That is upstream work; until it lands, the link
+  is your responsibility on each host.
+- It does **not** ship an `AGENTS.md` in this repository. The
+  `agents.md` standard is host-agnostic — drop one next to `CLAUDE.md`
+  if your open-source host is your primary one.
+- It does **not** touch the npm tarball or the `DEFAULT_REF` constant —
+  this page is docs-only.
