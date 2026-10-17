@@ -152,19 +152,22 @@ signature of two `$IMG2_HOME`s with the plugin registered in the inactive one.
 
 Sections §1–§5 cover the four hosts the base-skill CLI knows about —
 `hermes`, `claude`, `codex`, `opencode` (the `HOSTS` table in
-`bin/img2threejs.mjs`, §1). The four agents below are open-source, popular,
-multi-provider, and **not** in that table today; the install command ships
-its own launcher, but the base-skill link is something you create by hand —
-the same one-checkout / many-symlinks idea from §1. None of them adds a row
-to `HOSTS`; the link is purely a directory convention the agent reads on
-startup, so a fresh agent release can keep working without code changes here.
+`bin/img2threejs.mjs`, §1). The agents below are popular and **not** in
+that table today; the install command ships its own launcher, but the
+base-skill link is something you create by hand — the same one-checkout /
+many-symlinks idea from §1. Most are open-source, a few (Amp, Auggie) ship
+under proprietary licences that gate use behind an active subscription;
+each entry names the licence it ships under. None of them adds a row to
+`HOSTS`; the link is purely a directory convention the agent reads on
+startup, so a fresh agent release can keep working without code changes
+here.
 
-All four read **`AGENTS.md`** from the project root when it exists — the
-`agents.md` standard that Aider, Mistral Vibe, Pi and most other open-source
-agents adopt. For this skill that file is **not** checked in today (the
-canonical shared-instructions file in this repo is `CLAUDE.md`, §1); drop an
-`AGENTS.md` next to it when an open-source agent is your host and the agents
-in §6 will pick it up automatically.
+All agents in this section read **`AGENTS.md`** from the project root
+when it exists — the `agents.md` standard that Aider, Mistral Vibe, Pi and
+most other open-source agents adopt. For this skill that file is **not**
+checked in today (the canonical shared-instructions file in this repo is
+`CLAUDE.md`, §1); drop an `AGENTS.md` next to it when an open-source
+agent is your host and the agents in §6 will pick it up automatically.
 
 ### 6.1 Aider
 
@@ -289,5 +292,83 @@ when a run needs plugin context under Droid.
 - It does **not** ship an `AGENTS.md` in this repository. The
   `agents.md` standard is host-agnostic — drop one next to `CLAUDE.md`
   if your open-source host is your primary one.
+- It does **not** touch the npm tarball or the `DEFAULT_REF` constant —
+  this page is docs-only.
+
+## 7. IDEs and CLIs that read project-level rules
+
+§6 covered four open-source terminal agents (Aider, Pi, Mistral Vibe, Droid).
+This section covers three more **Tier-3** hosts that already have working
+project-rule loading — the only friction is mapping our docs path to the
+host's expected filename or directory. Like §6, none of them is in the
+`HOSTS` table; the link / config below is the only step needed for the
+*base skill*. Plugin-skill links still need the workaround described in
+[`docs/PLUGINS.md`](PLUGINS.md#host-skills).
+
+### 7.1 Windsurf (Cascade)
+
+Windsurf is an IDE, not a CLI — install the editor from
+<https://codeium.com/windsurf>. Cascade, its agent, picks up project-level
+rules from any of these at the repo root:
+
+- `.windsurf/rules/*.md` — modern format: one `.md` file per rule, each
+  with YAML frontmatter declaring its activation mode (`always_on`,
+  `model_decision`, `glob`, `manual`). Per-file cap: 12 000 characters.
+- `.windsurfrules` — legacy flat-file format, still supported; all rules
+  in one numbered list, all always-on.
+- `AGENTS.md` — simple directory-scoped fallback, no frontmatter.
+
+Global rules that apply across every project live at
+`~/.codeium/windsurf/memories/global_rules.md` (6 000-character cap) and
+stack on top of the project rules.
+
+### 7.2 Zed (Agent Panel)
+
+Zed is an editor + agent panel, not a CLI — install from <https://zed.dev>.
+Open the Agent Panel with `agent: new thread` from the Command Palette.
+
+Project instructions are loaded from the first matching file at the repo
+root, in this order:
+
+- `AGENTS.md` (Zed's primary)
+- `.rules`
+- `.windsurfrules`
+- `.clinerules`
+- `.github/copilot-instructions.md`
+- `AGENT.md`
+- `CLAUDE.md`
+- `GEMINI.md`
+
+Personal instructions (loaded on top of the project file) live at
+`~/.config/zed/AGENTS.md`. Zed's current implementation reads the
+**worktree-root** file only — nested `AGENTS.md` files in monorepos are
+silently ignored, unlike Codex CLI / Claude Code / Cursor which walk up
+from cwd.
+
+### 7.3 Continue CLI (`cn`)
+
+Install with `npm i -g @continuedev/cli` (Node.js 20+); the same package
+powers the Continue extension in VS Code and JetBrains, so a Continue
+user is a `cn` user and vice-versa. The launcher is `cn`.
+
+Configuration lives in `config.yaml` (default `~/.continue/config.yaml`,
+also selectable per-invocation via `--config <path-or-hub-slug>`). Rules
+are scanned from `.continue/rules/*.md` directories and from the config,
+or passed inline with `--rule <file|hub-slug|string>` (repeatable). `cn`
+does **not** auto-load `AGENTS.md` (it *creates* one via `cn init`, but
+does not read it back) — drop the install runbook into
+`.continue/rules/install.md` or invoke `cn --rule /path/to/AGENTS.md` per
+session.
+
+### What this section does NOT do
+
+- It does **not** add Windsurf, Zed or Continue CLI to the `HOSTS` table
+  in `bin/img2threejs.mjs`. The base-skill loading paths above are
+  host-native and need no installer glue; the plugin-skill workaround in
+  [`docs/PLUGINS.md`](PLUGINS.md#host-skills) still applies.
+- It does **not** ship an `AGENTS.md`, `.windsurf/rules/*.md` or
+  `.continue/rules/*.md` in this repository. The standards are
+  host-agnostic — drop one at the repo root if any of these hosts is your
+  primary one.
 - It does **not** touch the npm tarball or the `DEFAULT_REF` constant —
   this page is docs-only.
