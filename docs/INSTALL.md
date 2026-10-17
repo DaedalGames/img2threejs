@@ -148,12 +148,269 @@ signature of two `$IMG2_HOME`s with the plugin registered in the inactive one.
 - Harness [`PLUGIN_CONTRACT.md`](https://github.com/img2threejs/img2/blob/main/docs/PLUGIN_CONTRACT.md) — every plugin rule, including the gate runner and the emission-target socket.
 - [`CONTRIBUTING.md`](../CONTRIBUTING.md) — packaging and publication checks for this repository's own CLI.
 
-## 6. Other popular open-source coding agents
+## 6. Tier-1 mass-market coding agents (Cursor, Junie, Kiro)
+
+§1–§5 cover the four hosts the base-skill CLI's `HOSTS` table knows
+about — `hermes`, `claude`, `codex`, `opencode` (`bin/img2threejs.mjs`).
+§7 covers nine **Tier-3** open-source agents that read `AGENTS.md` (Aider,
+Pi, Mistral Vibe, Droid, Warp, Amp, Auggie, Crush, Trae). This section
+covers three **Tier-1** agents — Cursor, JetBrains Junie, AWS Kiro —
+whose user base and product gravity are an order of magnitude larger
+than the Tier-3 group, and whose instruction-loading mechanism is the
+most likely reason an `img2threejs` install lands in the wrong file or
+directory.
+
+**Why these three are different from §7.** Tier-3 agents converge on the
+`AGENTS.md` convention, so a repo that already ships `AGENTS.md` is
+picked up by every Tier-3 host for free. Tier-1 agents each picked a
+**different** convention before the open `Agent Skills` standard
+stabilised:
+
+- Cursor uses `.cursor/rules/*.mdc` (its own rule format), with
+  `AGENTS.md` as a plain-markdown fallback. Plain `.cursor/rules/*.md`
+  files are **ignored** — the rules system requires the `.mdc` extension
+  and YAML frontmatter. This is the single most common source of "I
+  dropped my rules into Cursor and nothing happened."
+- Junie reads `.junie/AGENTS.md` (preferred) or a root `AGENTS.md`
+  combined with `.junie/playbook.md` and `.junie/rules/*.md`. The
+  legacy `.junie/guidelines.md` is still supported but deprecated — a
+  repo that drops instructions only there will lose them on the next
+  JetBrains release.
+- Kiro reads `.kiro/steering/*.md` for project-wide instructions and
+  follows the `Agent Skills` standard at `.kiro/skills/<name>/SKILL.md`
+  for on-demand packages. Steering and skills are separate concerns:
+  steering files load on every session, skills load only when matched.
+
+All three now follow the open `Agent Skills` standard for skills, which
+means **a skill written for any Tier-1 host works on the other two** and
+on the Tier-3 group (which also adopts it, e.g. Crush and Pi). The
+project-level rule file is still host-specific — that is what each
+subsection below documents.
+
+**Like §7, none of these is in the `HOSTS` table.** The base-skill link
+is a directory convention the agent reads on startup; for the *plugin*
+skill, the absolute-path workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills)
+still applies, because `img2 add` only links the three rows the harness
+knows about (Claude, Codex, OpenCode).
+
+### 6.1 Cursor (Cursor CLI + IDE)
+
+Install via Cursor's official one-liner (macOS, Linux, Windows under
+WSL); Windows-native installs use the PowerShell variant:
+
+```bash
+curl https://cursor.com/install -fsS | bash
+# Windows (native, PowerShell):
+#   irm 'https://cursor.com/install?win32=true' | iex
+```
+
+The CLI binary is `agent` (verify with `agent --version`); the launcher
+lands in `~/.local/bin/agent` and is auto-added to `PATH` by the
+install script. Auto-update is on by default; force a refresh with
+`agent update`.
+
+**Rules** — Cursor's primary instruction mechanism, distinct from
+`AGENTS.md`:
+
+- `.cursor/rules/*.mdc` — one Markdown file per rule, **must** carry
+  YAML frontmatter (`description`, `globs`, `alwaysApply`). A plain
+  `.cursor/rules/*.md` (no frontmatter) is **ignored** by the rules
+  system — use `AGENTS.md` instead for plain markdown. Subdirectories
+  under `.cursor/rules/` are allowed (`.cursor/rules/frontend/components.mdc`).
+- `AGENTS.md` (project root) — simple alternative, treated as one big
+  always-applied rule; no frontmatter required.
+- `.cursorrules` (legacy, repo root) — a single flat file, still read on
+  startup for backwards compatibility. Most modern Cursor setups have
+  moved off it.
+
+Rule activation modes (chosen via the type dropdown in the Cursor UI,
+which sets `alwaysApply`, `globs`, and `description`):
+
+- `Always Apply` (`alwaysApply: true`) — included in every chat session.
+- `Apply Intelligently` (`description` only) — Agent decides relevance
+  from the description.
+- `Apply to Specific Files` (`globs` set) — auto-attached when a
+  matching file is in context.
+- `Apply Manually` (none of the above) — only when `@`-mentioned in chat.
+
+For the img2threejs skill, the most common pattern is one
+`.cursor/rules/img2threejs.mdc` with `alwaysApply: true` and the body
+pointing at `<your-checkout>/SKILL.md` (or simply summarising the
+contract). The task brief in this repo's earlier history referenced a
+`.cursor/rules/ponytail.md` rule — rename it to
+`.cursor/rules/img2threejs.mdc` and add frontmatter, because Cursor
+ignores `.md` rules today.
+
+**Skills** — Cursor follows the open `Agent Skills` standard; skills
+live in `.cursor/skills/<name>/SKILL.md` (workspace) and
+`~/.cursor/skills/<name>/SKILL.md` (global). The built-in `/create-skill`
+slash command scaffolds a new skill folder with the right `SKILL.md`
+frontmatter. **§1's manual rule applies**:
+
+```text
+# Workspace skill — visible to every Cursor project in this repo
+.cursor/skills/img2threejs  ->  <your checkout>
+
+# Global skill — visible to every Cursor project on this machine
+~/.cursor/skills/img2threejs ->  <your checkout>
+```
+
+The skill's own `SKILL.md` is the contract the agent reads; a rule is
+only needed if you want a short always-applied pointer to the skill, or
+to scope the rule to specific file globs. Cursor does **not** link
+either path on `img2 add` (Cursor is not in the harness `HOSTS` table);
+the absolute-path workaround in
+[`docs/PLUGINS.md`](PLUGINS.md#host-skills) is what makes a plugin's
+`SKILL.md` visible under Cursor.
+
+### 6.2 JetBrains Junie (CLI + IDE)
+
+Two install paths depending on the surface you want:
+
+```bash
+# CLI (the standalone `junie` binary in ~/.local/bin/junie)
+curl -fsSL https://junie.jetbrains.com/install.sh | bash
+# Homebrew (macOS):  brew tap jetbrains-junie/junie && brew install junie
+# npm (cross-platform, EAP-only officially): npm install -g @jetbrains/junie
+# Windows PowerShell:
+#   powershell -NoProfile -ExecutionPolicy Bypass -Command "iex (irm 'https://junie.jetbrains.com/install.ps1')"
+```
+
+Verify with `junie --version`. Authentication options: JetBrains
+account, Junie API key, or BYOK (Anthropic, OpenAI, Google, xAI,
+OpenRouter, GitHub Copilot). For the IDE form, install the Junie plugin
+from JetBrains Marketplace in any JetBrains IDE; both surfaces share the
+same guidelines and skills mechanism.
+
+**Guidelines / instructions** — Junie reads guidelines in this order
+(first match wins; later entries are legacy fallbacks):
+
+1. **`.junie/AGENTS.md`** (project root) — the **preferred standard**
+   location. Used exclusively if present, no combination with other
+   files. The Open Agents standard `AGENTS.md` is not used directly —
+   Junie expects its `.junie/` prefix.
+2. **`AGENTS.md`** (project root) — combined with **`.junie/playbook.md`**
+   and every **`.junie/rules/*.md`** if those exist. This is the
+   cross-agent path: a repo that already ships a root `AGENTS.md` for
+   §7 hosts is picked up by Junie for free.
+3. **`.junie/guidelines.md`** or **`.junie/guidelines/`** — **legacy
+   format, deprecated.** Still supported for backwards compatibility,
+   but JetBrains recommends migrating to `.junie/AGENTS.md` or
+   `AGENTS.md` + `.junie/rules/*.md`.
+
+Global guidelines: **`~/.junie/AGENTS.md`** (macOS/Linux) or
+`%USERPROFILE%\.junie\AGENTS.md` (Windows) — combined with the project
+guidelines when both exist; project wins on conflict. Override the
+filename with the `JUNIE_GUIDELINES_FILENAME` env var or
+`--guidelines-filename` CLI flag.
+
+On first project open, Junie CLI scans for instruction files from other
+agents (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, etc.) and offers to
+import them into `.junie/AGENTS.md` — it does **not** read those files
+directly for prompt context.
+
+**Skills** — Junie follows the open Agent Skills standard. Discovery
+order:
+
+1. `.junie/skills/<name>/SKILL.md` — workspace, VCS-shareable.
+2. `~/.junie/skills/<name>/SKILL.md` — user scope.
+3. `.agents/skills/<name>/SKILL.md` and `~/.agents/skills/<name>/SKILL.md`
+   — cross-agent (shared with Crush, Pi, Warp).
+4. Extension-provided skills via `.junie/extensions.json`.
+5. Custom locations via `--skill-location` or `skill-locations` in
+   `config.json`.
+
+For the base skill link:
+
+```text
+.junie/skills/img2threejs  ->  <your checkout>      # workspace, VCS-shareable
+~/.junie/skills/img2threejs -> <your checkout>      # global, applies everywhere
+```
+
+Like the others, Junie is not in the harness `HOSTS` table — the
+absolute-path workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills)
+is the supported way to read a plugin's `SKILL.md` under Junie.
+
+### 6.3 AWS Kiro (IDE + CLI)
+
+Install via Kiro's official installer (Linux, Windows); macOS and Linux
+also have a Homebrew-published package; the IDE form downloads a
+standalone installer from <https://kiro.dev>:
+
+```bash
+curl -fsSL https://cli.kiro.dev/install | bash
+# Verify:  kiro-cli --version
+# Update:  kiro-cli update
+```
+
+The IDE and CLI share the same `.kiro/` configuration — sign in once,
+the same auth state and skills apply to both. `kiro-cli chat` is the
+headless-friendly entry point; `kiro-cli` alone launches the interactive
+TUI.
+
+**Steering** — Kiro's primary instruction mechanism. Markdown files
+loaded on every session:
+
+- `.kiro/steering/<file>.md` — workspace, VCS-shareable. The CLI ships
+  with three default files: `product.md`, `structure.md`, `tech.md`. Add
+  more for project-specific conventions.
+- `~/.kiro/steering/<file>.md` — global, applies to every workspace.
+  Workspace steering wins on conflict.
+- `AGENTS.md` (project root) — also supported; same role as in §7
+  hosts.
+
+**Skills** — Kiro follows the open `Agent Skills` standard:
+
+- `.kiro/skills/<name>/SKILL.md` — workspace, VCS-shareable.
+- `~/.kiro/skills/<name>/SKILL.md` — global.
+- Skills load on demand: only the skill name and description load at
+  startup; the full `SKILL.md` loads only when the request matches the
+  description. Match-on-slash also works — type `/<skill-name>` in the
+  chat input to invoke directly.
+
+For the base skill link, the `.kiro/` and `~/.kiro/` paths are
+dedicated to Kiro only, so the link never conflicts with another host
+— there is no convention sharing to worry about:
+
+```text
+.kiro/skills/img2threejs  ->  <your checkout>        # workspace, VCS-shareable
+~/.kiro/skills/img2threejs -> <your checkout>        # global, applies everywhere
+```
+
+A workspace-level steering file that always points at the skill is also
+a valid pattern:
+
+```text
+.kiro/steering/img2threejs.md -> <your checkout>/SKILL.md
+# Or symlink the whole skills folder, same as above.
+```
+
+Like the others, Kiro is not in the harness `HOSTS` table — the
+absolute-path workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills)
+is the supported way to read a plugin's `SKILL.md` under Kiro.
+
+### What this section does NOT do
+
+- It does **not** add Cursor, Junie or Kiro to the `HOSTS` table in
+  `bin/img2threejs.mjs`. The instruction-loading paths above are
+  host-native and need no installer glue; the plugin-skill workaround
+  in [`docs/PLUGINS.md`](PLUGINS.md#host-skills) still applies.
+- It does **not** ship a `.cursor/rules/img2threejs.mdc`,
+  `.junie/AGENTS.md`, or `.kiro/steering/img2threejs.md` in this
+  repository. The standards are host-specific — drop one at the repo
+  root (or in the matching global directory) if your primary host is
+  one of these three.
+- It does **not** touch the npm tarball or the `DEFAULT_REF` constant —
+  this page is docs-only.
+
+## 7. Tier-3 open-source coding agents (CLI / terminal)
 
 Sections §1–§5 cover the four hosts the base-skill CLI knows about —
 `hermes`, `claude`, `codex`, `opencode` (the `HOSTS` table in
-`bin/img2threejs.mjs`, §1). The agents below are popular and **not** in
-that table today; the install command ships its own launcher, but the
+`bin/img2threejs.mjs`, §1). §6 covers three **Tier-1** mass-market agents
+(Cursor, Junie, Kiro). The agents below are nine **Tier-3** open-source
+agents that share the `AGENTS.md` convention — popular, **not** in
+the `HOSTS` table today; the install command ships its own launcher, but the
 base-skill link is something you create by hand — the same one-checkout /
 many-symlinks idea from §1. Most are open-source, a few (Amp, Auggie) ship
 under proprietary licences that gate use behind an active subscription;
@@ -167,9 +424,9 @@ when it exists — the `agents.md` standard that Aider, Mistral Vibe, Pi and
 most other open-source agents adopt. For this skill that file is **not**
 checked in today (the canonical shared-instructions file in this repo is
 `CLAUDE.md`, §1); drop an `AGENTS.md` next to it when an open-source
-agent is your host and the agents in §6 will pick it up automatically.
+agent is your host and the agents in §7 will pick it up automatically.
 
-### 6.1 Aider
+### 7.1 Aider
 
 Install the Python CLI; it pulls from PyPI:
 
@@ -209,7 +466,7 @@ The same pattern lets the harness reach a plugin in a non-default
 `$IMG2_HOME`: read steps by their printed absolute path — see
 [`docs/PLUGINS.md`](PLUGINS.md#host-skills) "Host skills".
 
-### 6.2 Pi (`@earendil-works/pi-coding-agent`)
+### 7.2 Pi (`@earendil-works/pi-coding-agent`)
 
 Install the npm CLI; `@mariozechner/pi-coding-agent` is the same upstream
 package (the `pi-mono` monorepo):
@@ -239,7 +496,7 @@ PLUGINS page describes for Hermes: the plugin still lives under
 `$IMG2_HOME/plugins/<id>`, the symlink above is what makes its `SKILL.md`
 visible to the agent.
 
-### 6.3 Mistral Vibe
+### 7.3 Mistral Vibe
 
 Bootstrap with the official installer; it places `uv` (if missing) and
 then installs `mistral-vibe` as a `uv` tool:
@@ -258,7 +515,7 @@ directory baked in, so the practical pattern is the same:
 For harness-installed plugins, read steps by their printed absolute path —
 [`docs/PLUGINS.md`](PLUGINS.md#host-skills).
 
-### 6.4 Droid (Factory AI)
+### 7.4 Droid (Factory AI)
 
 Install via Factory's official script (Homebrew, npm and Windows variants
 exist as well):
@@ -284,7 +541,7 @@ not in `HOSTS`, so a plugin's `SKILL.md` is not auto-linked; reach for
 the absolute-path workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills)
 when a run needs plugin context under Droid.
 
-### 6.5 Warp (Warp Agent CLI)
+### 7.5 Warp (Warp Agent CLI)
 
 Born from a terminal, open-sourced 2026-04-28 under AGPL-3.0
 ([`warpdotdev/warp`](https://github.com/warpdotdev/warp)). The **Warp
@@ -305,7 +562,7 @@ list — `.agents/skills/`, `.warp/skills/`, `.claude/skills/`,
 `.codex/skills/`, `.cursor/skills/`, `.gemini/skills/`,
 `.copilot/skills/`, `.factory/skills/`, `.github/skills/`,
 `.opencode/skills/` — so a repository already configured for any of
-the §1 hosts (or the other §6 agents) is picked up by the Warp Agent
+the §1 hosts (or the other §7 agents) is picked up by the Warp Agent
 CLI without an extra link. There is no Warp-blessed
 `<host-skills-dir>/img2threejs` location beyond the conventions list;
 follow §1's manual rule and point the symlink at whichever of the
@@ -315,7 +572,7 @@ checkout. The harness does not link any of those paths on `img2 add`
 [`docs/PLUGINS.md`](PLUGINS.md#host-skills) is what makes a plugin's
 `SKILL.md` visible under Warp.
 
-### 6.6 Amp (Sourcegraph)
+### 7.6 Amp (Sourcegraph)
 
 Install via Sourcegraph's install script (Homebrew and npm are also
 published):
@@ -339,7 +596,7 @@ Like the others, Amp is not in `HOSTS`; reach for the absolute-path
 workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills) when a run
 needs plugin context under Amp.
 
-### 6.7 Auggie (Augment Code)
+### 7.7 Auggie (Augment Code)
 
 Install the npm CLI (Node.js 20+); the same package powers the Augment
 VS Code and JetBrains extensions, so an Augment IDE user is an Auggie
@@ -367,7 +624,7 @@ is not in `HOSTS`); the absolute-path workaround in
 [`docs/PLUGINS.md`](PLUGINS.md#host-skills) is the supported way to
 read a plugin's `SKILL.md` under Auggie.
 
-### 6.8 Charm Crush
+### 7.8 Charm Crush
 
 Install via Homebrew or any of nine other package managers (npm,
 yay/Arch, nix, FreeBSD pkg, Windows winget/scoop, Debian/RPM repos,
@@ -399,7 +656,7 @@ OSI-approved). Crush is not in `HOSTS`; reach for the absolute-path
 workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills) when a run
 needs plugin context under Crush.
 
-### 6.9 Trae Agent (ByteDance) — optional
+### 7.9 Trae Agent (ByteDance) — optional
 
 A research-oriented agent with trajectory recording for every step and
 pluggable LLM providers — pick this only when you specifically need
@@ -429,18 +686,18 @@ above pick up `AGENTS.md` automatically and are a better starting point.
 - It does **not** touch the npm tarball or the `DEFAULT_REF` constant —
   this page is docs-only.
 
-## 7. IDEs and CLIs that read project-level rules
+## 8. IDEs and CLIs that read project-level rules
 
-§6 covered nine terminal / CLI agents — the original four (Aider, Pi,
-Mistral Vibe, Droid) plus the five Tier-3 additions in §6.5–§6.9 (Warp,
+§7 covered nine terminal / CLI agents — the original four (Aider, Pi,
+Mistral Vibe, Droid) plus the five Tier-3 additions in §7.5–§7.9 (Warp,
 Amp, Auggie, Crush, Trae). This section covers three more **Tier-3**
 hosts that already have working project-rule loading — the only friction
 is mapping our docs path to the host's expected filename or directory.
-Like §6, none of them is in the `HOSTS` table; the link / config below
+Like §7, none of them is in the `HOSTS` table; the link / config below
 is the only step needed for the *base skill*. Plugin-skill links still
 need the workaround described in [`docs/PLUGINS.md`](PLUGINS.md#host-skills).
 
-### 7.1 Windsurf (Cascade)
+### 8.1 Windsurf (Cascade)
 
 Windsurf is an IDE, not a CLI — install the editor from
 <https://codeium.com/windsurf>. Cascade, its agent, picks up project-level
@@ -457,7 +714,7 @@ Global rules that apply across every project live at
 `~/.codeium/windsurf/memories/global_rules.md` (6 000-character cap) and
 stack on top of the project rules.
 
-### 7.2 Zed (Agent Panel)
+### 8.2 Zed (Agent Panel)
 
 Zed is an editor + agent panel, not a CLI — install from <https://zed.dev>.
 Open the Agent Panel with `agent: new thread` from the Command Palette.
@@ -480,7 +737,7 @@ Personal instructions (loaded on top of the project file) live at
 silently ignored, unlike Codex CLI / Claude Code / Cursor which walk up
 from cwd.
 
-### 7.3 Continue CLI (`cn`)
+### 8.3 Continue CLI (`cn`)
 
 Install with `npm i -g @continuedev/cli` (Node.js 20+); the same package
 powers the Continue extension in VS Code and JetBrains, so a Continue
