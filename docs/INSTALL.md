@@ -284,11 +284,145 @@ not in `HOSTS`, so a plugin's `SKILL.md` is not auto-linked; reach for
 the absolute-path workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills)
 when a run needs plugin context under Droid.
 
+### 6.5 Warp (Warp Agent CLI)
+
+Born from a terminal, open-sourced 2026-04-28 under AGPL-3.0
+([`warpdotdev/warp`](https://github.com/warpdotdev/warp)). The **Warp
+Agent CLI** is a standalone `warp` command that runs in any terminal,
+separate from the Warp GUI:
+
+```bash
+curl -fsSL https://app.warp.dev/download/agent-cli | bash
+# or, on macOS 14+ / Linux:
+brew install --cask warp-agent-cli
+```
+
+The CLI reads `AGENTS.md` (or the legacy `WARP.md`) automatically from
+the repository root and the current working directory, with subdirectory
+rules as best-effort, plus a personal `~/.agents/AGENTS.md` that applies
+across every project. It also discovers skills from a broad convention
+list — `.agents/skills/`, `.warp/skills/`, `.claude/skills/`,
+`.codex/skills/`, `.cursor/skills/`, `.gemini/skills/`,
+`.copilot/skills/`, `.factory/skills/`, `.github/skills/`,
+`.opencode/skills/` — so a repository already configured for any of
+the §1 hosts (or the other §6 agents) is picked up by the Warp Agent
+CLI without an extra link. There is no Warp-blessed
+`<host-skills-dir>/img2threejs` location beyond the conventions list;
+follow §1's manual rule and point the symlink at whichever of the
+above paths the CLI will scan, or drop an `AGENTS.md` that names the
+checkout. The harness does not link any of those paths on `img2 add`
+(Warp is not in `HOSTS`); the absolute-path workaround in
+[`docs/PLUGINS.md`](PLUGINS.md#host-skills) is what makes a plugin's
+`SKILL.md` visible under Warp.
+
+### 6.6 Amp (Sourcegraph)
+
+Install via Sourcegraph's install script (Homebrew and npm are also
+published):
+
+```bash
+curl -fsSL https://ampcode.com/install.sh | bash
+# or: brew install amp
+# or: npm install -g @sourcegraph/amp@latest   # @ampcode/cli is the newer package name
+```
+
+Amp runs on macOS, Linux, and Windows through WSL. **Reads `AGENTS.md`**
+from the cwd, every parent directory, and each subtree, plus
+`~/.config/amp/AGENTS.md`, `~/.config/AGENTS.md`, and a system-wide
+`/etc/ampcode/AGENTS.md` (`/Library/Application Support/ampcode/AGENTS.md`
+on macOS, `%ProgramData%\ampcode\AGENTS.md` on Windows). Disable with
+`AMP_IGNORE_GUIDANCE_FILES='*'` if a project ships guidance you do not
+want loaded. Amp also supports `@doc/...` mentions inside `AGENTS.md`
+to import further instruction files (relative paths resolve against the
+file containing the mention). Sign in with `amp login` after install.
+Like the others, Amp is not in `HOSTS`; reach for the absolute-path
+workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills) when a run
+needs plugin context under Amp.
+
+### 6.7 Auggie (Augment Code)
+
+Install the npm CLI (Node.js 20+); the same package powers the Augment
+VS Code and JetBrains extensions, so an Augment IDE user is an Auggie
+user and vice-versa:
+
+```bash
+npm install -g @augmentcode/auggie
+```
+
+Sign in with `auggie login`, then `auggie "your prompt"` for the
+full-screen interactive terminal — `--print` for non-interactive / CI
+use, `--quiet` to drop the trailing chatter. **Reads `AGENTS.md` and
+`CLAUDE.md`** hierarchically from the workspace root downward into
+parent directories (only `AGENTS.md` / `CLAUDE.md` are discovered this
+way; `.augment/rules/*.md` files are loaded only from the workspace
+root). The `--rules <path>` flag appends an extra file on top of the
+discovered ones, and `~/.augment/rules/` adds user-wide rules that
+apply across every project. The CLI ships under Augment's custom
+proprietary licence: an active Augment subscription is required to use
+it, redistribution is not permitted, and the CLI is distributed only
+through Augment's official npm registry. Augment positions the CLI for
+enterprise codebases that already license the Augment context engine.
+The harness does not write to any Auggie path on `img2 add` (Augment
+is not in `HOSTS`); the absolute-path workaround in
+[`docs/PLUGINS.md`](PLUGINS.md#host-skills) is the supported way to
+read a plugin's `SKILL.md` under Auggie.
+
+### 6.8 Charm Crush
+
+Install via Homebrew or any of nine other package managers (npm,
+yay/Arch, nix, FreeBSD pkg, Windows winget/scoop, Debian/RPM repos,
+`go install`):
+
+```bash
+brew install charmbracelet/tap/crush
+# or:
+npm install -g @charmland/crush
+# or: yay -S crush-bin, nix run github:numtide/nix-ai-tools#crush,
+#     winget install charmbracelet.crush, scoop install crush,
+#     go install github.com/charmbracelet/crush@latest
+```
+
+Built on the Charm stack (Bubble Tea / Lip Gloss / Glamour); first-class
+terminal support on macOS, Linux, Windows (PowerShell + WSL), and the
+BSDs (FreeBSD, OpenBSD, NetBSD). LSP-enhanced (`gopls`,
+`typescript-language-server`, `rust-analyzer`, `nil`, …) for
+language-aware context, MCP for adding stdio / HTTP / SSE context
+servers, and a SQLite-backed session model. **Reads `AGENTS.md`** —
+`crush.json`'s `options.initialize_as` defaults to `AGENTS.md` — plus
+`CRUSH.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`,
+`.github/copilot-instructions.md` and their `.local` variants.
+Project skills directories default to `./skills` and `./.crush/skills`;
+the global ones are `~/.config/crush/skills` and `~/.config/agents/skills`
+(override the global list with `CRUSH_SKILLS_DIR=<path>`). License is
+FSL-1.1-MIT (Fair Source, source-visible with use restrictions — not
+OSI-approved). Crush is not in `HOSTS`; reach for the absolute-path
+workaround in [`docs/PLUGINS.md`](PLUGINS.md#host-skills) when a run
+needs plugin context under Crush.
+
+### 6.9 Trae Agent (ByteDance) — optional
+
+A research-oriented agent with trajectory recording for every step and
+pluggable LLM providers — pick this only when you specifically need
+the audit log or the multi-LLM swappability, since `AGENTS.md` support
+is opt-in (Settings → Rules & Memories → "Include AGENTS.md in the
+context") and is still tracked as an open feature request upstream:
+
+```bash
+git clone https://github.com/bytedance/trae-agent
+cd trae-agent && uv sync --all-extras && source .venv/bin/activate
+trae
+```
+
+Licence MIT ([`bytedance/trae-agent`](https://github.com/bytedance/trae-agent),
+arXiv:2507.23370). For general coding-agent use, the eight agents
+above pick up `AGENTS.md` automatically and are a better starting point.
+
 ### What this section does NOT do
 
-- It does **not** add Aider, Pi, Mistral Vibe or Droid to the `HOSTS` table
-  in `bin/img2threejs.mjs`. That is upstream work; until it lands, the link
-  is your responsibility on each host.
+- It does **not** add Aider, Pi, Mistral Vibe, Droid, Warp, Amp, Auggie,
+  Crush or Trae to the `HOSTS` table in `bin/img2threejs.mjs`. That is
+  upstream work; until it lands, the link is your responsibility on each
+  host.
 - It does **not** ship an `AGENTS.md` in this repository. The
   `agents.md` standard is host-agnostic — drop one next to `CLAUDE.md`
   if your open-source host is your primary one.
@@ -297,13 +431,14 @@ when a run needs plugin context under Droid.
 
 ## 7. IDEs and CLIs that read project-level rules
 
-§6 covered four open-source terminal agents (Aider, Pi, Mistral Vibe, Droid).
-This section covers three more **Tier-3** hosts that already have working
-project-rule loading — the only friction is mapping our docs path to the
-host's expected filename or directory. Like §6, none of them is in the
-`HOSTS` table; the link / config below is the only step needed for the
-*base skill*. Plugin-skill links still need the workaround described in
-[`docs/PLUGINS.md`](PLUGINS.md#host-skills).
+§6 covered nine terminal / CLI agents — the original four (Aider, Pi,
+Mistral Vibe, Droid) plus the five Tier-3 additions in §6.5–§6.9 (Warp,
+Amp, Auggie, Crush, Trae). This section covers three more **Tier-3**
+hosts that already have working project-rule loading — the only friction
+is mapping our docs path to the host's expected filename or directory.
+Like §6, none of them is in the `HOSTS` table; the link / config below
+is the only step needed for the *base skill*. Plugin-skill links still
+need the workaround described in [`docs/PLUGINS.md`](PLUGINS.md#host-skills).
 
 ### 7.1 Windsurf (Cascade)
 
