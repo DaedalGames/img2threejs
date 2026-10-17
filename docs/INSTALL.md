@@ -76,7 +76,7 @@ Manual alternative — one checkout, every host entering it through a symlink, s
 
 # Other hosts (single path per host):
 ~/.claude/skills/img2threejs                       -> <your checkout>
-~/..codex/skills/img2threejs                        -> <your checkout>
+~/.codex/skills/img2threejs                        -> <your checkout>
 ~/.config/opencode/skills/img2threejs              -> <your checkout>
 ```
 
