@@ -31,8 +31,8 @@ alone. Reach for the harness when a **domain plugin** serves the item — and no
 command below works before you install anything**, as
 `npx --yes @img2threejs/img2@latest <command>`. Measured on an empty, throwaway `$IMG2_HOME`:
 `--version --json` and `list` exit 0 and write nothing (`list` reports `Registered 0` and points at
-`img2 plugins`), `capabilities` answers `providers: []`, and only `doctor` exits 1 — saying exactly
-`no harness checkout at <home>; run img2 install`.
+`img2 plugins`), `capabilities` answers `providers: []`, and only `doctor` exits 1, with a `FAIL` line
+`` no harness checkout at <home>/harness; run `img2 install` ``.
 
 ```bash
 npx --yes @img2threejs/img2@latest install   # once per machine: ~/.img2 + an `img2` launcher on PATH
@@ -62,7 +62,8 @@ img2 remove cs2                           # unlink every host, move clone to bac
 
 The npm package is only an entry point. `install` clones the harness into `$IMG2_HOME/harness` and
 links that checkout's own CLI (`$IMG2_HOME/harness/bin/img2.mjs`, a zero-dependency Node script) as
-`img2` in a writable directory on `PATH`, so `which img2` resolves **into the checkout**, not into a
+`img2` in `~/.local/bin`, `/opt/homebrew/bin` or `/usr/local/bin` (whichever is on `PATH` and
+writable; other `PATH` directories are not used), so `which img2` resolves **into the checkout**, not into a
 global npm prefix — and the CLI's version is the checkout's tag, not the npm dist-tag. That makes the
 CLI version a machine property worth checking (`img2 --version --json`) rather than an assumption:
 this block's `plugins`, `update`, `npm:<name>` and short-id forms are 0.4.0 additions, while an older
@@ -77,7 +78,8 @@ Run against a throwaway `$IMG2_HOME` (nothing of an existing setup touched), in 
 2. **Harness checkout** — clones the harness into `$IMG2_HOME/harness`, following the repository's
    **default branch rather than the newest tag** (measured: `v0.4.0-1-g06634bd`), so the checkout can
    sit a commit past the tag it reports.
-3. **Agent access** — links the launcher into a writable directory on `PATH`. When no such directory
+3. **Agent access** — links the launcher into `~/.local/bin`, `/opt/homebrew/bin` or `/usr/local/bin`,
+   whichever is on `PATH` and writable. When none
    qualifies it links **nothing**: it warns `No writable launcher directory on PATH; use npx
    instead` and prints the `npx` form. That is why the block above is written to work whether or not
    an `img2` launcher exists. Claude host detection is **directory-existence** at `~/.claude/`, not
@@ -85,7 +87,7 @@ Run against a throwaway `$IMG2_HOME` (nothing of an existing setup touched), in 
    `permissions.additionalDirectories` to `~/.claude/settings.json` regardless of whether Claude
    Code is installed; the message `Claude Code not detected; settings left unchanged` means only
    that the directory is absent. Side-effect contract and how to suppress it:
-   [`docs/INSTALL.md` §2](INSTALL.md#2-install-the-harness-only-if-a-domain-plugin-serves-the-item).
+   [`docs/INSTALL.md` §3](INSTALL.md#3-add-a-plugin-only-if-you-need-one).
 
 ## What a run sees depends on `$IMG2_HOME`
 
@@ -173,8 +175,9 @@ but **does not create** `~/.hermes/profiles/<active>/skills/img2-<id>` — the p
 unless you create that link yourself, one per plugin.
 
 `img2 doctor` only walks the harness `HOSTS` table, so for a Hermes-only host it says nothing about
-plugin-skill links — the base CLI's `img2threejs doctor` reports the **base** skill link (per
-host), and is the only reliable read-back for a Hermes plugin link you made by hand.
+plugin-skill links, and the base CLI's `img2threejs doctor` reports only the **base** skill link.
+Neither sees a Hermes plugin link you made by hand: check it with
+`ls -l ~/.hermes/profiles/<profile>/skills/` or the host's own skill listing.
 
 Two workarounds for hosts the harness does not know about (Hermes today, anything new until
 upstream lands the row), in order of preference:
@@ -184,7 +187,7 @@ upstream lands the row), in order of preference:
    profile:
 
    ```bash
-   ln -s "$IMG2_HOME/plugins/cs2" ~/.hermes/profiles/${HERMES_ACTIVE_PROFILE:-img2threejs}/skills/img2-cs2
+   ln -sfn "${IMG2_HOME:-$HOME/.img2}/plugins/cs2" ~/.hermes/profiles/${HERMES_ACTIVE_PROFILE:-img2threejs}/skills/img2-cs2
    ```
 
    A homemade Hermes link is visible to your model and invisible to `img2 doctor`. If you want it

@@ -15,8 +15,7 @@ subsequently be *exported* to; an explicitly-selected emission target (`--target
 terminal, whole-artifact transform of the already-built model, verified to its own stated limit,
 never a second way to build one.
 
-Agent-agnostic: works under Hermes, Claude Code, Codex, or OpenCode — the four hosts the installer
-sets up (`docs/INSTALL.md`). Wherever this doc says "agent vision" or "agent browser tool", use
+Agent-agnostic: works under Hermes, Claude Code, Codex, or OpenCode. Wherever this doc says "agent vision" or "agent browser tool", use
 whatever the host provides — native image reading, a browser MCP (playwright/chrome-devtools), the
 project preview, or a user-supplied screenshot.
 
@@ -27,38 +26,11 @@ read the named file at the moment you reach that stage, not before.
 ## Canonical shared checkout
 
 Keep one checkout of this repository and let every host enter it through a symlink, so the hosts
-execute the same code instead of drifting apart. The installer does this for the hosts it detects —
-`hermes`, `claude`, `codex`, `opencode` — and a manual install symlinks the same entry per host.
-**Hermes is profile-scoped**: skills live under `~/.hermes/profiles/<profile>/skills/`, so a manual
-install must symlink into the profile that will read the skill (the active one, by default
-`img2threejs`, set with `HERMES_ACTIVE_PROFILE`). **Two paths may be needed for Hermes**: the
-profile-scoped path (above) is what Hermes discovers at session start, but the base-skill
-`img2threejs doctor` only validates the **global** path `~/.hermes/skills/img2threejs`. If the
-preflight is part of your workflow, create both — the profile-scoped one for Hermes, the global
-one for `doctor`:
-
-```text
-# Hermes: BOTH paths may be needed (profile-scoped for Hermes, global for `img2threejs doctor`).
-~/.hermes/profiles/<profile>/skills/img2threejs -> <your checkout>
-~/.hermes/skills/img2threejs                    -> <your checkout>
-
-# Other hosts (single path per host):
-~/.claude/skills/img2threejs                     -> <your checkout>
-~/.codex/skills/img2threejs                      -> <your checkout>
-~/.config/opencode/skills/img2threejs            -> <your checkout>
-```
-
-> **WARNING — CLI does NOT honour an existing workspace symlink.**
-> Running `npx img2threejs@latest install --host <host>` on a host where the
-> workspace checkout is already linked into Hermes (or any other host) will
-> create a **second copy** of the skill at `~/.img2threejs/releases/<sha>/img2threejs/`
-> and link that host to the release copy, not to your checkout. The two copies
-> then drift independently, which violates the "Canonical shared checkout"
-> promise above.
-> If a host already has the workspace linked, use the **manual install** form
-> (the symlink snippet further down) instead of running the CLI on that host.
-
-Install and verify runbook (which CLI does what, expected output, troubleshooting):
+execute the same code instead of drifting apart. `npx --yes img2threejs@latest install` does this
+for the hosts it detects (`hermes`, `claude`, `codex`, `opencode`); it refuses (exit 2) to replace a
+link it does not manage, so a hand-made link is never silently swapped for a release copy.
+**Hermes** reads skills per profile: also link `~/.hermes/profiles/<profile>/skills/img2threejs`
+(the installer writes only `~/.hermes/skills/`). Install, manual symlinks, and troubleshooting:
 [`docs/INSTALL.md`](docs/INSTALL.md).
 
 ## When To Use
@@ -67,60 +39,25 @@ The user attaches/points to an object image and wants a procedural Three.js mode
 reconstruction/animation/destruction plan, a sculpt spec, or code. Also for material studies,
 action-ready props, game objects, botanical/mechanical parts, and stylized reconstructions.
 
-## Preflight: check and install the plugin surface (before any work)
+## Profile preflight (once per run, before `forge/next.py`)
 
-Domain knowledge — CS2 skin families and finishes, animation readiness, emission targets — lives in
-installed plugins, not in this checkout, so what a run can reach is decided *before* its first
-script runs. Do this preflight at the start of every reconstruction, and again after any
-environment change: a profile discovered missing after the spec is authored costs the spec.
+Domain knowledge (CS2 skins, animated characters, emission targets) lives in plugins, not in this
+checkout. Pick the profile from the subject, then confirm this environment can start it:
 
 ```bash
-img2 --version --json     # harness present? prints harness, coreApi, contract, commands[]
-img2 list                 # what the ACTIVE $IMG2_HOME has registered
-img2 doctor               # fail-loud static audit — must be clean before you build on it
-python3 forge/state.py init --help | grep profile   # the profiles this environment can start
+python3 forge/state.py init --help | grep -- --profile   # profiles available here
 ```
 
-- `$IMG2_HOME` decides what a run sees (default `~/.img2`), and composition is the registry at
-  `$IMG2_HOME/plugins.json` — this pipeline reads that registry, never a glob of `plugins/`. On a
-  machine with more than one home, a plugin installed into the inactive one is linked, audited, and
-  contributes **nothing** to the run: `img2 list` and the `--profile` choices are the two answers
-  that matter, and they must agree.
-- When a domain plugin serves the item (a CS2 weapon skin, an animated character), **install it and
-  confirm its profile appears before starting** — never downgrade the run to `generic` behind the
-  user's back, and never vendor the domain logic into this checkout:
-
-  ```bash
-  img2 add cs2 --yes                      # short id — harness CLI >= 0.4.0, `img2 plugins` lists the catalog
-  img2 add img2threejs/plugin-cs2         # the org/repo form works on any harness version
-  img2 doctor && img2 sync --check
-  ```
-
-  `--link <path>` symlinks a local checkout instead of cloning (plugin development); `--ref <tag>`
-  pins something other than the newest tag. Check the version first — `img2 plugins` and short ids
-  do not exist before CLI 0.4.0, and the `img2threejs/plugin-<id>` form is the portable one.
-
-  **Hermes caveat.** The harness's `HOSTS` table does not include Hermes, so `img2 add` does NOT
-  create `~/.hermes/profiles/<active>/skills/img2-<id>` for you — the plugin's `SKILL.md` is not
-  in your model's context until you symlink it yourself:
-
-  ```bash
-  ln -s "$IMG2_HOME/plugins/cs2" ~/.hermes/profiles/${HERMES_ACTIVE_PROFILE:-img2threejs}/skills/img2-cs2
-  ```
-
-  `img2 doctor` walks only the harness `HOSTS` table and is silent about a hand-made Hermes link;
-  the read-back that does see it is your host's own skill listing.
-
-- Then read what the profile's own steps name, completely, at the moment you reach them: the
-  plugin's `SKILL.md` and the contract each step points at are the authority for that domain's
-  steps, gates and reference material, exactly as they are for `character`.
-- Still no provider for a profile you need, and the failure modes around it:
-  [`docs/PLUGINS.md`](docs/PLUGINS.md).
+- `generic` / `character` are built in: no harness, no plugin, nothing else to check.
+- A missing domain profile (`cs2`, `animated-character`) is a setup gap: never downgrade to
+  `generic` silently. Installing it edits the user's machine, so give them the commands in
+  [`docs/INSTALL.md` §3](docs/INSTALL.md#3-add-a-plugin-only-if-you-need-one), get their go-ahead,
+  re-check, and continue.
+- Installed but not listed (wrong `$IMG2_HOME`), or a Hermes plugin link: [`docs/PLUGINS.md`](docs/PLUGINS.md).
+- Then read what the profile's own steps name, at the moment you reach them: the plugin's
+  `SKILL.md` and contracts govern that domain.
 
 ## Core Promise
-
-**Step zero is the plugin preflight above** — the domain a run needs must be installed and
-registered in the `$IMG2_HOME` this environment uses before anything else.
 
 Sculpt from a photo, in order — never one-shot a mesh:
 1. **Run `python3 forge/next.py --state .img2threejs/state.json [<spec>]` first**, at every start,
@@ -461,21 +398,13 @@ infer the shape from the reference, as for any other object.
   blocked run: it is the generic path, and the reconstruction proceeds by inference.
 - This pipeline names no domain. If a rule is domain-specific, it lives in that domain's plugin.
 
-### Domain plugin flows
-Domain plugins (CS2, animated-character, etc.) add mandatory setup steps and blocking gates. Steps and paths are plugin-specific — do not improvise. Key flows:
-- **CS2 plugin** (`plugin-cs2`): setup steps `cs2-contract-read → cs2-authoritative-classification → cs2-manifest → cs2-spec-augmentation → solve_camera_pose → bake_projected_texture → cs2-review` (blocking). See the plugin's own `docs/cs2/review-gates.md`.
-- **img2 harness**: `img2 add img2threejs/plugin-<id> --ref <tag>` to install, `img2 capabilities` to discover, `img2 doctor` to resolve.
-- **Installing and using plugins end to end** — what a run sees, how `domain.json` reaches this checklist, plugin gates, host linking, troubleshooting: [`docs/PLUGINS.md`](docs/PLUGINS.md).
-
 ### The img2 harness
 
 Plugins are installed and managed by the `img2` harness
 ([img2threejs/img2](https://github.com/img2threejs/img2)), a separate dependency-free CLI (Node
-launcher, Python core). This skill
-vendors no domain logic and never writes a substitute for it: **installing and checking plugins is
-the preflight above — part of starting a run, not a reason to stop.** A profile that is missing is
-a setup gap to close with `img2 add` (or a `$IMG2_HOME` to correct); only a plugin that genuinely
-does not exist upstream is a blocker to report.
+launcher, Python core). This skill vendors no domain logic and never writes a substitute for it;
+a missing profile is handled by the preflight above, and only a plugin that does not exist
+upstream is a blocker to report.
 
 ```bash
 img2 add img2threejs/plugin-<id> --ref <tag>      # install a plugin at a tag (e.g. plugin-cs2)
