@@ -49,7 +49,7 @@ python3 forge/state.py init --help | grep -- --profile   # profiles available he
 ```
 
 - `generic` / `character` are built in: no harness, no plugin, nothing else to check.
-- A missing domain profile (`cs2`, `animated-character`) is a setup gap: never downgrade to
+- A missing domain profile (e.g. `cs2`) is a setup gap: never downgrade to
   `generic` silently. Installing it edits the user's machine, so give them the commands in
   [`docs/INSTALL.md` §3](docs/INSTALL.md#3-add-a-plugin-only-if-you-need-one), get their go-ahead,
   re-check, and continue.

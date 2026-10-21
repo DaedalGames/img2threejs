@@ -143,7 +143,8 @@ Failure modes are loud, by construction:
   one.
 
 In-repo profiles are `generic` and `character`. Installed plugins add their own
-(`cs2`, `animated-character`, `environment`, …); see the README's official-plugin table.
+profiles: `img2 plugins` lists the catalog, and `python3 forge/state.py init --help` the profiles
+this environment can start.
 `steps.json` and `gates.json` are the harness-side surfaces (contributed steps ordered among
 themselves, and gates); `domain.json` is the one this pipeline consumes.
 

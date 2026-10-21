@@ -154,11 +154,10 @@ It links an `img2` command if `~/.local/bin`, `/opt/homebrew/bin` or `/usr/local
 
 These are announced plugins; use `img2 plugins` for the current catalog. Open each
 plugin's linked README for its input requirements, dependencies and tool setup.
-For CS2 and character workflows:
+For example, the CS2 plugin:
 
 ```bash
 img2 add cs2 --yes
-img2 add character --yes
 img2 list
 img2 doctor
 img2 sync --check

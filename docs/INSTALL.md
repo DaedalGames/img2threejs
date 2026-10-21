@@ -1,7 +1,7 @@
 # Install img2threejs
 
 One command installs the skill into every supported coding agent on your machine. Plugins are
-optional and only needed for specific domains (CS2 skins, rigged characters, GLB output).
+optional and only needed for specific domains, for example CS2 skins.
 
 You need **Node.js ≥ 18**, **Git**, and **Python ≥ 3.10**, plus one of: Claude Code, Codex,
 OpenCode, Hermes. Other agents: [§7](#7-other-coding-agents).
@@ -17,7 +17,7 @@ https://github.com/img2threejs/img2threejs/blob/main/docs/INSTALL.md
    Always use the npx form, never a bare `img2threejs` command.
    Exit 2 means an existing skill is in the way: show me the path and stop.
 2. If ~/.hermes exists, run the Hermes step in §1.
-3. Install the plugin harness only if I asked for CS2 skins, an animated character or GLB output (§3).
+3. Install the plugin harness only if I asked for something a plugin provides (§3; `img2 plugins` lists them).
 4. Re-running any step is safe. Do not edit dotfiles by hand.
 5. Tell me which agents were linked and that I must restart them.
 ```
@@ -71,7 +71,7 @@ by id (list them with `img2 plugins`; harness 0.4.0 or newer):
 
 ```bash
 npx --yes @img2threejs/img2@latest install --yes     # once per machine: creates ~/.img2
-npx --yes @img2threejs/img2@latest add cs2 --yes     # or: character, img2glb, hello-cube
+npx --yes @img2threejs/img2@latest add cs2 --yes     # example id; `img2 plugins` lists all
 npx --yes @img2threejs/img2@latest list              # the plugin must be listed here
 ```
 
