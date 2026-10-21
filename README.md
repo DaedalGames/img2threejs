@@ -144,17 +144,19 @@ It links an `img2` command if `~/.local/bin`, `/opt/homebrew/bin` or `/usr/local
 
 ### 3. Choose plugins — do not install everything by default
 
+<!-- plugins:start -->
 | Plugin / source README | Adds | Access | Install after harness setup |
 |---|---|---|---|
-| [cs2](https://github.com/img2threejs/plugin-cs2) | `cs2` profile — CS2 weapon/glove skin reconstruction, family adapters, finish rules and blocking domain review gates | Public | `img2 add cs2 --yes` |
-| [character](https://github.com/img2threejs/plugin-character) | `animated-character` profile — character workflow plus Stage R rigging/animation gates | Public | `img2 add character --yes` |
-| [environment](https://github.com/img2threejs/plugin-environment) | The environment plugin, distributed from a private repository | **Private — authorized Git access required** | `img2 add environment --yes` |
-| [img2glb](https://github.com/img2threejs/plugin-img2glb) | Explicit `image → glb` route through the hosted TRELLIS space; generated mesh output, not the default code-only route | Public | `img2 add img2glb --yes` |
-| [hello-cube](https://github.com/img2threejs/plugin-hello-cube) | Small deterministic image-to-Three.js cube example and plugin contract exerciser | Public | `img2 add hello-cube --yes` |
+| [character](https://github.com/img2threejs/plugin-character) | Character rigging and animation: skeleton from a GLB, skin conditioning, clip measurement, action design, and a twelve-check rig gate. | Public | `img2 add character --yes` |
+| [cs2](https://github.com/img2threejs/plugin-cs2) | Counter-Strike 2 weapon and glove skin reconstruction: intake contract, authoritative classification, finish/material recipes, and a blocking review gate. | Public | `img2 add cs2 --yes` |
+| [environment](https://github.com/img2threejs/plugin-environment) | Install and manage the private img2 environment plugin through the img2 harness. Authorized GitHub access is required. | **Private — authorized Git access required** | `img2 add environment --yes` |
+| [hello-cube](https://github.com/img2threejs/plugin-hello-cube) | Turn an image into a deterministic Three.js cube (contract exerciser) | Public | `img2 add hello-cube --yes` |
+| [img2glb](https://github.com/img2threejs/plugin-img2glb) | Turn an image into a GLB 3D mesh via the hosted TRELLIS space | Public | `img2 add img2glb --yes` |
+<!-- plugins:end -->
 
-These are announced plugins; use `img2 plugins` for the current catalog. Open each
-plugin's linked README for its input requirements, dependencies and tool setup.
-For example, the CS2 plugin:
+The table above is generated from the live catalog (`scripts/ci/plugin_table.py`); list all
+plugins with `img2 plugins`. Open each plugin's linked README for its input requirements,
+dependencies and tool setup. Example (the `cs2` plugin; substitute any catalog id):
 
 ```bash
 img2 add cs2 --yes

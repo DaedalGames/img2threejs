@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import md_links  # noqa: E402
 import md_tables  # noqa: E402
+import plugin_table  # noqa: E402
 import pr_scope  # noqa: E402
 import skill_budget  # noqa: E402
 
@@ -93,6 +94,69 @@ class ScopeTests(unittest.TestCase):
     def test_stacked_overlap(self):
         r = pr_scope.stacked_overlap(["a", "b"], [{"number": 5, "commits": ["b", "z"]}, {"number": 6, "commits": ["q"]}])
         self.assertEqual(r, {5: ["b"]})
+
+
+def _plugin(i, access="public"):
+    return {"id": i, "description": f"{i} desc", "source": f"org/plugin-{i}", "access": access, "npmCli": None}
+
+
+class PluginTableTests(unittest.TestCase):
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        self.cat = os.path.join(self.d, "catalog.json")
+        self.readme = os.path.join(self.d, "README.md")
+        with open(self.readme, "w") as f:
+            f.write("intro\n<!-- plugins:start -->\nold\n<!-- plugins:end -->\noutro\n")
+
+    def _cat(self, *plugins):
+        with open(self.cat, "w") as f:
+            json.dump({"schema": 1, "plugins": list(plugins)}, f)
+
+    def _run(self, *flags):
+        return plugin_table.main(["--catalog", self.cat, "--readme", self.readme, *flags])
+
+    def _text(self):
+        with open(self.readme) as f:
+            return f.read()
+
+    def test_write_then_check_clean(self):
+        self._cat(_plugin("b"), _plugin("a", "private"))
+        self.assertEqual(self._run("--check"), 1)
+        self.assertEqual(self._run("--write"), 0)
+        self.assertEqual(self._run("--check"), 0)
+        t = self._text()
+        self.assertTrue(t.startswith("intro\n") and t.endswith("outro\n"))
+        self.assertIn("[a](https://github.com/org/plugin-a)", t)
+        self.assertIn("`img2 add b --yes`", t)
+        self.assertIn("**Private", t)
+        self.assertLess(t.index("[a]"), t.index("[b]"))
+        self.assertEqual(md_tables.check_text(t), [])
+
+    def test_add_and_remove_change_table(self):
+        self._cat(_plugin("a"))
+        self._run("--write")
+        self._cat(_plugin("a"), _plugin("c"))
+        self.assertEqual(self._run("--check"), 1)
+        self._run("--write")
+        self.assertIn("img2 add c --yes", self._text())
+        self._cat(_plugin("a"))
+        self.assertEqual(self._run("--check"), 1)
+        self._run("--write")
+        self.assertNotIn("img2 add c", self._text())
+
+    def test_missing_markers_and_bad_catalog(self):
+        with open(self.readme, "w") as f:
+            f.write("no markers\n")
+        self._cat(_plugin("a"))
+        self.assertEqual(self._run("--check"), 2)
+        with open(self.cat, "w") as f:
+            f.write("{}")
+        self.assertEqual(self._run("--check"), 2)
+
+    def test_pipe_in_description_escaped(self):
+        p = _plugin("a")
+        p["description"] = "x | y"
+        self.assertIn("x \\| y", plugin_table.render([p]))
 
 
 if __name__ == "__main__":
