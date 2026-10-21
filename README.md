@@ -51,28 +51,27 @@ Every model in the gallery is generated code, running in your browser. No mesh f
 
 Reconstructions built entirely from primitives, procedural shaders, and generated geometry. Open any model to orbit it, inspect its reference, and read the generated source.
 
+<!-- showcase:start -->
 | Demo | Subject | Built with | View | Source |
 | --- | --- | --- | --- | --- |
-| Dual-Sword Warrior — TypeScript procedural surfaces ⚠︎ | character | `v1.5.1` | [Live](https://img2threejs.io/#/demo/girl-character) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/girl-character/createGirlCharacterModel.ts) |
-| Low-Poly Humanoid — Rigged Character ⚠︎ | character | `v1.5.0` | [Live](https://img2threejs.io/#/demo/low-poly-humanoid) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/low-poly-humanoid/createLowPolyHumanoidModel.ts) |
+| Tropical Island — Code-only Diorama | object | — | [Live](https://img2threejs.io/#/demo/tropical-island) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/tropical-island/createTropicalIslandModel.ts) |
+| Man Robot · Segment Color Studio | character | — | [Live](https://img2threejs.io/#/demo/man-robot-studio) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/man-robot-studio/robotModel.ts) |
+| Snowbound Crossing — Mini Game | object | — | [Live](https://img2threejs.io/#/demo/snowy-village) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/snowy-village/createSnowyVillageModel.ts) |
+| Ocean Blue PRS Guitar — Measured Surface Flow | object | `v1.5.2` | [Live](https://img2threejs.io/#/demo/prs-ocean) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/prs-ocean/createPrsOceanModel.ts) |
+| Groot — Heart of the Forest | character | `v1.5.2` | [Live](https://img2threejs.io/#/demo/monster-tree) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/monster-tree/createMonsterTreeModel.ts) |
+| Raz — Detonating Strike VFX | character | `v1.5.2` | [Live](https://img2threejs.io/#/demo/raz) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/raz/razVfx.ts) |
+| Starship + Super Heavy | object | `v1.2.0` | [Live](https://img2threejs.io/#/demo/starship-super-heavy) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/starship-super-heavy/createStarshipSuperHeavyModel.ts) |
+| Mars Cat — Measured Procedural Surfaces | character | `v1.5.1` | [Live](https://img2threejs.io/#/demo/mars-cat) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/mars-cat/createMarsCatModel.ts) |
+| Lee Sin — Game Character | character | `v1.5.1` | [Live](https://img2threejs.io/#/demo/leesin) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/leesin/createLeesinModel.ts) |
+| Dual-Sword Warrior — Procedural Character | character | `v1.5.1` | [Live](https://img2threejs.io/#/demo/girl-character-3) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/girl-character-3/createGirlCharacter3Model.ts) |
+| AWP \| Medusa (Minimal Wear) · V2 rebuild | object | `v1.4.4` | [Live](https://img2threejs.io/#/demo/awp-medusa-v2) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/awp-medusa-v2/createAwpMedusaModelV2.ts) |
 | ★ Talon Knife \| Doppler Ruby (Factory New) | object | `v1.4.4` | [Live](https://img2threejs.io/#/demo/talon-doppler-ruby) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/talon-doppler-ruby/createTalonDopplerRubyModel.ts) |
-| AWP \| Medusa (Minimal Wear) · V2 rebuild | object | `V2` | [Live](https://img2threejs.io/#/demo/awp-medusa-v2) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/awp-medusa-v2/createAwpMedusaModelV2.ts) |
-| Pikachu 10K Star Celebration ⚠︎ | character | `v1.5-beta` | [Live](https://img2threejs.io/#/demo/electric-mouse-mascot) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/electric-mouse-mascot/createElectricMouseMascotModel.ts) |
-| Glock-18 \| Ghost Protocol (Well-Worn) | object | `v1.4.1` | [Live](https://img2threejs.io/#/demo/glock-ghost-protocol) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/glock-ghost-protocol/createGlockGhostProtocolModel.ts) |
-| Classic Knife \| Fade (Minimal Wear) | object | `v1.3` | [Live](https://img2threejs.io/#/demo/classic-fade) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/classic-fade/createClassicFadeModel.ts) |
-| BMX Endurance Bike | object | `v1.3` | [Live](https://img2threejs.io/#/demo/bmx-endurance) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/bmx-endurance/createBmxEnduranceBikeModel.ts) |
-| M9 Bayonet \| Doppler Phase 2 | object | `v1.3` | [Live](https://img2threejs.io/#/demo/m9-doppler) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/m9-doppler/createM9DopplerModel.ts) |
-| Sony WF-1000XM3 Earbuds + Case | object | `v1.2` | [Live](https://img2threejs.io/#/demo/sony-wf1000xm3) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/sony-wf1000xm3/createSonyWf1000xm3Model.ts) |
-| ISSACA 12 Gauge Shotgun | object | `v1.2` | [Live](https://img2threejs.io/#/demo/issaca-shotgun) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/issaca-shotgun/createIssacaShotgunModel.ts) |
-| Gerber Paracord Knife | object | `v1.2` | [Live](https://img2threejs.io/#/demo/gerber-knife) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/gerber-knife/createGerberKnifeModel.ts) |
-| Doraemon House (isometric diorama) | object | `v1.2` | [Live](https://img2threejs.io/#/demo/doraemon-house) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/doraemon-house/createDoraemonHouseModel.ts) |
-| War-Hauler "SECTOR 07" | object | `v1.2` | [Live](https://img2threejs.io/#/demo/warhauler) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/warhauler/createWarHaulerModel.ts) |
-| Crowned Loot Chest ⚠︎ | object | `v1.2` | [Live](https://img2threejs.io/#/demo/crown-chest) | [code](https://github.com/img2threejs/img2threejs-showcase/blob/main/src/demos/crown-chest/createCrownChestModel.ts) |
+<!-- showcase:end -->
 
-⚠︎ marks a demo whose registry `status` is still `placeholder` rather than `final` — it renders, but it
-is not finished work. The **Built with** column is the version each demo's own registry entry records in
-`generatedWith`, not an inference from dates; `awp-medusa-v2` records `V2`, which is that demo's rebuild
-pass rather than a release number. Rows are ordered newest first by the commit that added the demo.
+The newest finished demos, generated from the gallery's
+[`demos.json`](https://img2threejs.io/demos.json) by `scripts/ci/showcase_table.py`. The gallery
+also has work in progress. **Built with** is the version tag in each demo's own `generatedWith`
+record (— when it names none).
 
 The gallery source lives in [img2threejs/img2threejs-showcase](https://github.com/img2threejs/img2threejs-showcase). If this project is useful, a star on this repo helps others find it.
 

@@ -53,11 +53,11 @@ def render(plugins):
     return "\n".join(rows)
 
 
-def replace_block(text, table):
-    i, j = text.find(START), text.find(END)
+def replace_block(text, table, start=START, end=END):
+    i, j = text.find(start), text.find(end)
     if i < 0 or j < i:
-        raise ValueError(f"README needs {START} ... {END} markers")
-    return text[: i + len(START)] + "\n" + table + "\n" + text[j:]
+        raise ValueError(f"README needs {start} ... {end} markers")
+    return text[: i + len(start)] + "\n" + table + "\n" + text[j:]
 
 
 def main(argv=None):

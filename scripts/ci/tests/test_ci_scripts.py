@@ -9,6 +9,7 @@ import md_links  # noqa: E402
 import md_tables  # noqa: E402
 import plugin_table  # noqa: E402
 import pr_scope  # noqa: E402
+import showcase_table  # noqa: E402
 import skill_budget  # noqa: E402
 
 GOOD = "| a | b |\n|---|:-:|\n| 1 | 2 |\n"
@@ -157,6 +158,58 @@ class PluginTableTests(unittest.TestCase):
         p = _plugin("a")
         p["description"] = "x | y"
         self.assertIn("x \\| y", plugin_table.render([p]))
+
+
+def _demo(i, date, status="final", version="v1.5.2"):
+    return {"id": f"d{i}", "title": f"Demo {i}", "subjectClass": "object", "status": status,
+            "updatedAt": date, "version": version, "url": f"https://x/#/demo/d{i}",
+            "sourceUrl": f"https://x/src/d{i}.ts"}
+
+
+class ShowcaseTableTest(unittest.TestCase):
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        self.cat = os.path.join(self.d, "demos.json")
+        self.readme = os.path.join(self.d, "README.md")
+        with open(self.readme, "w") as f:
+            f.write("a\n<!-- showcase:start -->\nold\n<!-- showcase:end -->\nb\n")
+
+    def _cat(self, *demos):
+        with open(self.cat, "w") as f:
+            json.dump({"schema": 1, "demos": list(demos)}, f)
+
+    def _run(self, *flags):
+        return showcase_table.main(["--catalog", self.cat, "--readme", self.readme, *flags])
+
+    def test_newest_final_only_and_limit(self):
+        demos = [_demo(i, f"2026-01-{i + 1:02d}") for i in range(14)] + [_demo(99, "2026-12-31", "placeholder")]
+        table = showcase_table.render(demos, limit=12)
+        self.assertNotIn("Demo 99", table)
+        self.assertIn("Demo 13", table)
+        self.assertNotIn("Demo 1 |", table)
+        self.assertLess(table.index("Demo 13"), table.index("Demo 12"))
+        self.assertEqual(len(table.splitlines()), 14)
+        self.assertEqual(md_tables.check_text(table + "\n"), [])
+
+    def test_missing_version_and_pipe(self):
+        d = _demo(1, "2026-01-01", version=None)
+        d["title"] = "Knife | Fade"
+        table = showcase_table.render([d])
+        self.assertIn("| — |", table)
+        self.assertIn("Knife \\| Fade", table)
+
+    def test_write_check_and_new_demo(self):
+        self._cat(_demo(1, "2026-01-01"))
+        self.assertEqual(self._run("--check"), 1)
+        self.assertEqual(self._run("--write"), 0)
+        self.assertEqual(self._run("--check"), 0)
+        self._cat(_demo(1, "2026-01-01"), _demo(2, "2026-02-01"))
+        self.assertEqual(self._run("--check"), 1)
+
+    def test_bad_catalog(self):
+        with open(self.cat, "w") as f:
+            f.write('{"demos": [{"id": "x"}]}')
+        self.assertEqual(self._run("--check"), 2)
 
 
 if __name__ == "__main__":
